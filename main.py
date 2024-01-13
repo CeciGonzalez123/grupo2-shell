@@ -1,5 +1,6 @@
 import os
-from comandos import (copiar_archivos, mover_archivos)
+from comandos import (copiar_archivos, mover_archivos, renombrar_archivo,
+                      listar_directorio)
 
 
 def mostrar_prompt():
@@ -34,9 +35,18 @@ def ejecutar_comando(comando):
             mover_archivos(origenes, destino)
         else:
             print("Error: Se necesitan al menos dos argumentos para 'mover'")
-    else: #escribis otra cosa que no esta programada
-        print("Comando no reconocido")
-
+   
+    elif partes[0] == "renombrar":
+        # Invoca renombrar_archivo con 2 parámetros
+        if len(partes) == 3:
+            origen, nuevo_nombre = partes[1], partes[2]
+            renombrar_archivo(origen, nuevo_nombre)
+        else:
+            print("Error: El comando 'renombrar' requiere exactamente dos argumentos")
+    elif partes[0] == "listar":
+        # Invoca listar_directorio con un directorio (o el directorio actual)
+        directorio = partes[1] if len(partes) > 1 else '.'
+        listar_directorio(directorio)
 
 def main():
     """
