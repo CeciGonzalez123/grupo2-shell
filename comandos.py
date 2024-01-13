@@ -67,4 +67,14 @@ def listar_directorio(ruta='.'):
                 print(entrada.name)
     except Exception as e:
         print(f"Error al listar directorio: {e}")
-        
+def crear_directorios(directorios):
+    """
+    Crea uno o varios directorios.
+    :param directorios: Lista de nombres de directorios a crear.
+    """
+    try:
+        for directorio in directorios:
+            os.makedirs(directorio, exist_ok=True)
+            print(f"Directorio '{directorio}' creado con éxito.")
+    except Exception as e:
+        print(f"Error al crear directorios: {e}")

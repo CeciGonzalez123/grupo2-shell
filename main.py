@@ -1,6 +1,6 @@
 import os
 from comandos import (copiar_archivos, mover_archivos, renombrar_archivo,
-                      listar_directorio)
+                      listar_directorio,crear_directorios)
 
 
 def mostrar_prompt():
@@ -47,6 +47,13 @@ def ejecutar_comando(comando):
         # Invoca listar_directorio con un directorio (o el directorio actual)
         directorio = partes[1] if len(partes) > 1 else '.'
         listar_directorio(directorio)
+    elif partes[0] == "creardir":
+        # Invoca crear_directorios con múltiples directorios
+        if len(partes) > 1:
+            directorios = partes[1:]
+            crear_directorios(directorios)
+        else:
+            print("Error: El comando 'creardir' requiere al menos un argumento")
 
 def main():
     """
