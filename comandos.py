@@ -19,3 +19,20 @@ def copiar_archivos(origenes, destino):
     except Exception as e: #manda las excepciones a la variable e
         print(f"Error al copiar: {e}")
 
+def mover_archivos(origenes, destino):
+    """
+    Mueve múltiples archivos de 'origenes' a 'destino'.
+    :param origenes: Lista de rutas de archivos a mover.
+    :param destino: Ruta de destino donde se moverán los archivos.
+    """
+    try:
+        for origen in origenes:
+            # Destino final para cada archivo/directorio
+            destino_final = os.path.join(destino, os.path.basename(origen))
+
+            # Mover archivo o directorio
+            shutil.move(origen, destino_final)
+
+        print(f"\nArchivos movidos correctamente a '{destino}'.\n")
+    except Exception as e:
+        print(f"Error al mover: {e}")

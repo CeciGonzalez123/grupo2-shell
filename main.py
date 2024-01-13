@@ -1,5 +1,5 @@
 import os
-from comandos import (copiar_archivos)
+from comandos import (copiar_archivos, mover_archivos)
 
 
 def mostrar_prompt():
@@ -27,7 +27,13 @@ def ejecutar_comando(comando):
             copiar_archivos(origenes, destino)
         else:
             print("Error: Se necesitan al menos dos argumentos para 'copiar'")
-       
+    elif partes[0] == "mover":
+        # Invoca mover_archivos con múltiples archivos de origen y un destino
+        if len(partes) >= 3:
+            *origenes, destino = partes[1:]
+            mover_archivos(origenes, destino)
+        else:
+            print("Error: Se necesitan al menos dos argumentos para 'mover'")
     else: #escribis otra cosa que no esta programada
         print("Comando no reconocido")
 
