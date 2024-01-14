@@ -10,3 +10,5 @@
 - Desarrollo del comando 'renombrar' según el requerimiento 4.3 y Desarrollo del comando 'listar' según requerimirnto 4.4.
 ## v1.4 [2024-01-13]
 - Desarrollo del comando 'creardir' según requerimiento 4.5
+## v1.5 [2024-01-14]
+- Desarrollo del comando 'ir' según requerimirnto 4.6

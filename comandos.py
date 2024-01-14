@@ -78,3 +78,13 @@ def crear_directorios(directorios):
             print(f"Directorio '{directorio}' creado con éxito.")
     except Exception as e:
         print(f"Error al crear directorios: {e}")
+def cambiar_directorio(destino):
+    """
+    Cambia el directorio de trabajo actual al directorio especificado.
+    :param destino: Ruta del directorio de destino.
+    """
+    try:
+        os.chdir(destino)
+        print(f"Directorio cambiado a '{destino}'")
+    except Exception as e:
+        print(f"Error al cambiar de directorio: {e}")
