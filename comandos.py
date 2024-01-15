@@ -88,3 +88,16 @@ def cambiar_directorio(destino):
         print(f"Directorio cambiado a '{destino}'")
     except Exception as e:
         print(f"Error al cambiar de directorio: {e}")
+def cambiar_permisos(ruta, modo):
+    """
+    Cambia los permisos de un archivo o directorio.
+    :param ruta: Ruta del archivo o directorio cuyos permisos se cambiarán.
+    :param modo: Modo de permiso en formato octal (ejemplo: '755').
+    """
+    try:
+        # Convertir el modo de string a formato octal
+        modo_octal = int(modo, 8)
+        os.chmod(ruta, modo_octal)
+        print(f"Permisos de '{ruta}' cambiados a {modo}")
+    except Exception as e:
+        print(f"Error al cambiar permisos: {e}")

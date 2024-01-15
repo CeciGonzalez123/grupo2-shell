@@ -1,6 +1,6 @@
 import os
 from comandos import (copiar_archivos, mover_archivos, renombrar_archivo,
-                      listar_directorio,crear_directorios,cambiar_directorio)
+                      listar_directorio,crear_directorios,cambiar_directorio,cambiar_permisos)
 
 
 def mostrar_prompt():
@@ -61,6 +61,13 @@ def ejecutar_comando(comando):
             cambiar_directorio(destino)
         else:
             print("Error: El comando 'ir' requiere un argumento de destino")
+    elif partes[0] == "permisos":
+        # Invoca cambiar_permisos con una ruta y un modo
+        if len(partes) == 3:
+            ruta, modo = partes[1], partes[2]
+            cambiar_permisos(ruta, modo)
+        else:
+            print("Error: El comando 'permisos' requiere dos argumentos (ruta y modo)")
 
 def main():
     """
