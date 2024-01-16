@@ -12,3 +12,5 @@
 - Desarrollo del comando 'creardir' según requerimiento 4.5
 ## v1.5 [2024-01-14]
 - Desarrollo del comando 'ir' según requerimirnto 4.6
+## v1.6 [2024-01-16]
+- Desarrollo de los comandos 4.8 al 4.18
