@@ -2,15 +2,17 @@ import shutil
 import os
 import signal
 import stat
-#import pwd
-#import grp
+# import pwd
+# import grp
 import subprocess
 import getpass
-#import crypt
+# import crypt
 import socket
 import time
 from pathlib import Path
 from demonio import Demonio
+import logger
+import logging
 
 demonio = None
 
@@ -22,15 +24,20 @@ def copiar_archivos(origenes, destino):
     :param destino: Ruta de destino donde se copiarán los archivos.
     """
     try:
-        for origen in origenes: #origenes es una lista de elementos y recorre eso
+        for origen in origenes:  # origenes es una lista de elementos y recorre eso
             if os.path.isdir(origen):
                 shutil.copytree(origen, os.path.join(
                     destino, os.path.basename(origen)))
             else:
                 shutil.copy(origen, destino)
         print(f"\nArchivos copiados correctamente a '{destino}'.\n")
-    except Exception as e: #manda las excepciones a la variable e
+    except Exception as e:  # manda las excepciones a la variable e
+        logger.log(
+            f"Error al copiar: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al copiar: {e}")
+
 
 def mover_archivos(origenes, destino):
     """
@@ -48,7 +55,12 @@ def mover_archivos(origenes, destino):
 
         print(f"\nArchivos movidos correctamente a '{destino}'.\n")
     except Exception as e:
+        logger.log(
+            f"Error al mover: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al mover: {e}")
+
 
 def renombrar_archivo(origen, nuevo_nombre):
     """
@@ -60,11 +72,20 @@ def renombrar_archivo(origen, nuevo_nombre):
         # Extraemos el directorio base donde se encuentra el archivo
         base_dir = os.path.dirname(origen)
         destino = os.path.join(base_dir, nuevo_nombre)
-        print(destino)
         # Renombramos el archivo o directorio
         os.rename(origen, destino)
         print(f"\n'{origen}' ha sido renombrado a '{destino}'.\n")
+    except FileNotFoundError:
+        logger.log(
+            f"El archivo {origen} no existe.",
+            "sistema_error",
+            logging.ERROR)
+        print(f"El archivo {origen} no existe.")
     except Exception as e:
+        logger.log(
+            f"Error al renombrar: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al renombrar: {e}")
 
 
@@ -77,8 +98,12 @@ def listar_directorio(ruta='.'):
         # Listar el contenido del directorio
         with os.scandir(ruta) as entradas:
             for entrada in entradas:
-                print(entrada.name)
+                print(f"   {entrada.name}")
     except Exception as e:
+        logger.log(
+            f"Error al listar directorio: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al listar directorio: {e}")
 
 
@@ -92,6 +117,10 @@ def crear_directorios(directorios):
             os.makedirs(directorio, exist_ok=True)
             print(f"Directorio '{directorio}' creado con éxito.")
     except Exception as e:
+        logger.log(
+            f"Error al crear directorios: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al crear directorios: {e}")
 
 
@@ -104,6 +133,10 @@ def cambiar_directorio(destino):
         os.chdir(destino)
         print(f"Directorio cambiado a '{destino}'")
     except Exception as e:
+        logger.log(
+            f"Error al cambiar de directorio: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al cambiar de directorio: {e}")
 
 
@@ -114,12 +147,27 @@ def cambiar_permisos(ruta, modo):
     :param modo: Modo de permiso en formato octal (ejemplo: '755').
     """
     try:
+        # Verificar si el archivo o directorio existe
+        if not os.path.exists(ruta):
+            raise FileNotFoundError(
+                f"El archivo o directorio '{ruta}' no existe.")
         # Convertir el modo de string a formato octal
         modo_octal = int(modo, 8)
         os.chmod(ruta, modo_octal)
         print(f"Permisos de '{ruta}' cambiados a {modo}")
+    except FileNotFoundError:
+        logger.log(
+            f"El archivo {ruta} no existe.",
+            "sistema_error",
+            logging.ERROR)
+        print(f"El archivo {ruta} no existe.")
     except Exception as e:
+        logger.log(
+            f"Error al cambiar permisos: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al cambiar permisos: {e}")
+
 
 def cambiar_propietario(archivos):
     """
@@ -130,9 +178,18 @@ def cambiar_propietario(archivos):
         uid = 1000
         gid = 1000
         for archivo in archivos:
+            # Verificar si el archivo o directorio existe
+            if not os.path.exists(archivo):
+                raise FileNotFoundError(
+                    f"El archivo o directorio '{archivo}' no existe.")
             os.chown(archivo, uid, gid)
-        print(f"Propietario de '{archivo}' cambiado a {uid}:{gid}")
+        print(
+            f"Propietario de '{archivo}' cambiado a usuario y grupo root ({uid}:{gid})")
     except Exception as e:
+        logger.log(
+            f"Error al cambiar propietario: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al cambiar propietario: {e}")
 
 
@@ -140,24 +197,17 @@ def cambiar_clave(usuario):
     """
     Cambia la contraseña del usuario actual
     """
-    while True:
-        clave = getpass.getpass(prompt="Ingrese clave: ")
-        confirmacion = getpass.getpass(prompt="Confirme clave: ")
-
-        if clave != confirmacion:
-            print("No coincide, intente nuevamente")
-            continue
-        #else:
-         #   nueva_clave = crypt.crypt(clave, "22")
-        break
-
     try:
         with open("/etc/passwd", "r") as passwd_file:
             lines = passwd_file.readlines()
     except Exception as e:
+        logger.log(
+            f"Error al leer /etc/passwd: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al leer /etc/passwd: {e}")
 
-    # Busca al usuario indica y escribe nueva clave encriptada
+    # Busca al usuario indicado y solicia nueva clave
     try:
         with open("/etc/passwd", "r") as passwd_file:
             existe = False
@@ -165,6 +215,15 @@ def cambiar_clave(usuario):
                 parts = line.strip().split(":")
                 if parts[0] == usuario:
                     existe = True
+                    while True:
+                        clave = getpass.getpass(prompt="Ingrese clave: ")
+                        confirmacion = getpass.getpass(
+                            prompt="Confirme clave: ")
+
+                        if clave != confirmacion:
+                            print("No coincide, intente nuevamente")
+                            continue
+                        break
                     parts[1] = clave
                     print(":".join(parts))
             if not existe:
@@ -173,6 +232,10 @@ def cambiar_clave(usuario):
                 print(
                     f"Clave de usuario '{usuario}' ha sido cambiada (simulada)")
     except Exception as e:
+        logger.log(
+            f"Error al escribir en /etc/passwd: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al escribir en /etc/passwd: {e}")
 
 
@@ -183,7 +246,12 @@ def mostrar_directorio_actual():
     try:
         print(f"Directorio actual: {Path.cwd()}")
     except Exception as e:
+        logger.log(
+            f"Error al obtener el directorio actual: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al obtener el directorio actual: {e}")
+
 
 def agregar_usuario(username):
     if existe_usuario(username):
@@ -254,7 +322,7 @@ def solicitar_clave():
             print("Clave y confirmacion no coinciden, intente nuevamente")
             continue
         else:
-            #return crypt.crypt(password, "22")
+            # return crypt.crypt(password, "22")
             return False
 
 
@@ -264,18 +332,26 @@ def agregar_informacion(filename, texto):
     return
 
 
-def matar_procesos(pids, senal):
+def matar_procesos(pid):
     """
-    Termina procesos enviando una señal específica.
-    :param pids: Lista de PIDs de los procesos a terminar.
-    :param senal: Señal a enviar a los procesos.
+    Termina proceso enviando una señal específica.
+    :param pid: PID del proceso a terminar.    
     """
     try:
-        for pid in pids:
-            os.kill(int(pid), senal)
-        print(f"Señal {senal} enviada a los procesos {', '.join(pids)}")
+        os.kill(int(pid), signal.SIGKILL)
+        print(f"Proceso con PID {pid} ha sido terminado.")
+    except ProcessLookupError:
+        print(f"No se encontró el proceso con PID {pid}.")
+        logger.log(
+            f"No se encontró el proceso con PID {pid}",
+            "sistema_error",
+            logging.ERROR)
     except Exception as e:
         print(f"Error al enviar señal: {e}")
+        logger.log(
+            f"Error al enviar señal: {e}",
+            "sistema_error",
+            logging.ERROR)
 
 
 def buscar_en_archivo(archivo, cadena_busqueda):
@@ -287,11 +363,22 @@ def buscar_en_archivo(archivo, cadena_busqueda):
     try:
         with open(archivo, 'r') as file:
             for num_linea, linea in enumerate(file, 1):
-                if cadena_busqueda in linea:
+                if cadena_busqueda.lower() in linea.lower():
                     print(f"Línea {num_linea}: {linea.strip()}")
+                else:
+                    print(
+                        f"No se encontró coincidencia, para {cadena_busqueda}")
     except FileNotFoundError:
+        logger.log(
+            f"El archivo {archivo} no existe.",
+            "sistema_error",
+            logging.ERROR)
         print(f"El archivo {archivo} no existe.")
     except Exception as e:
+        logger.log(
+            f"Error al buscar en el archivo: {e}",
+            "sistema_error",
+            logging.ERROR)
         print(f"Error al buscar en el archivo: {e}")
 
 
@@ -341,6 +428,8 @@ def ejecutar_comando_sistema(comando):
             if resultado.stderr:
                 print(resultado.stderr)
         except subprocess.CalledProcessError as e:
+            logger.log(
+                f"Error al ejecutar el comando del sistema: {e}",
+                "sistema_error",
+                logging.ERROR)
             print(f"Error al ejecutar el comando del sistema: {e}")
-
-
