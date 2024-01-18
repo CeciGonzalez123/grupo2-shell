@@ -114,7 +114,7 @@ def crear_directorios(directorios):
     """
     try:
         for directorio in directorios:
-            os.makedirs(directorio, exist_ok=True)
+            os.makedirs(directorio, exist_ok=False)
             print(f"Directorio '{directorio}' creado con éxito.")
     except Exception as e:
         logger.log(
@@ -130,6 +130,10 @@ def cambiar_directorio(destino):
     :param destino: Ruta del directorio de destino.
     """
     try:
+        # Verificar si el archivo o directorio existe
+        if not os.path.exists(destino):
+            raise FileNotFoundError(
+                f"El archivo o directorio '{destino}' no existe.")
         os.chdir(destino)
         print(f"Directorio cambiado a '{destino}'")
     except Exception as e:
@@ -365,9 +369,7 @@ def buscar_en_archivo(archivo, cadena_busqueda):
             for num_linea, linea in enumerate(file, 1):
                 if cadena_busqueda.lower() in linea.lower():
                     print(f"Línea {num_linea}: {linea.strip()}")
-                else:
-                    print(
-                        f"No se encontró coincidencia, para {cadena_busqueda}")
+
     except FileNotFoundError:
         logger.log(
             f"El archivo {archivo} no existe.",
