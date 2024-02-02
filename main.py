@@ -62,7 +62,7 @@ def hora_actual():
 
 def log_entrada(ip="127.0.1.1"):
     hora = hora_actual()
-    ip_actual = socket.gethostbyname(socket.gethostname())
+    ip_actual = socket.gethostbyname(ip)
     logger.log(
         f"Inicio de sesión a las '{hora}' desde la ip '{ip_actual}'.", "accion", logging.INFO)
 
