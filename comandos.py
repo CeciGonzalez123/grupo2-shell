@@ -275,7 +275,7 @@ def agregar_usuario(username):
 
     # Solicitar informacion personal
     fullname = input("Fullname: ")
-    ip = str(socket.gethostbyname(socket.gethostname()))
+    ip = str(socket.gethostbyname("127.0.1.1"))
     entrada = input("Hora de Entrada HH:MM: ")
     entrada = entrada.replace(":", "")
     salida = input("Hora de Salida HH:MM: ")
