@@ -155,7 +155,7 @@ def ejecutar_comando(comando):
             print("Uso: permisos [archivo] [modo]")
     elif partes[0] == "propietario":
         # Invoca cambiar_propietario a multiples archivos y los asigna al usuario:grupo indicado
-        if len(partes) > 3:
+        if len(partes) > 2:
             nuevo_propietario = partes[-1]
             cambiar_propietario(partes[1:-1], nuevo_propietario)
         else:
