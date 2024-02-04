@@ -1,6 +1,6 @@
 import os
 import signal
-from ftp import transferir_ftp
+from ftp import transferir_ftp, descargar_ftp, listar_ftp
 import logger
 import logging
 from comandos import (copiar_archivos, mover_archivos, renombrar_archivo,
@@ -64,13 +64,13 @@ def log_entrada(ip="127.0.1.1"):
     hora = hora_actual()
     ip_actual = socket.gethostbyname(ip)
     logger.log(
-        f"Inicio de sesión a las '{hora}' desde la ip '{ip_actual}'.", "accion", logging.INFO)
+        f"Inicio de sesión a las '{hora}' desde la ip '{ip_actual}'.", "usuario_horarios_log", logging.INFO)
 
 
 def log_salida():
     hora = hora_actual()
     logger.log(
-        f"Cierre de sesión a las '{hora}'", "accion", logging.INFO)
+        f"Cierre de sesión a las '{hora}'", "usuario_horarios_log", logging.INFO)
 
 
 def ejecutar_comando(comando):
@@ -132,11 +132,13 @@ def ejecutar_comando(comando):
             print("Uso: permisos [archivo] [modo]")
     elif partes[0] == "propietario":
         # Invoca cambiar_propietario a multiples archivos y los asigna al usuario root
-        if len(partes) > 1:
-            cambiar_propietario(partes[1:])
+        if len(partes) > 3:
+            usurio = partes[-2]
+            grupo = partes[-1]
+            cambiar_propietario(partes[1:-2], usurio, grupo)
         else:
             print(
-                "Uso: propietario [archivo_1] [archivo_2] [archivo_n]")
+                "Uso: propietario [archivo_1] [archivo_2] [archivo_n] [usuario] [grupo]")
     elif partes[0] == "clave":
         # Invoca cambiar_clave para usuario actual
         if len(partes) == 1:
@@ -209,15 +211,27 @@ def ejecutar_comando(comando):
             print("Uso: ejecutar [comando]")
     elif partes[0] == "transferir":
         # Invoca transferir_ftp con los parámetros necesarios
-        if len(partes) == 5:
-            hostname = partes[1]
-            username = partes[2]
-            password = partes[3]
-            archivo = partes[4]
-            transferir_ftp(hostname, username, password, archivo)
+        if len(partes) == 2:
+            archivo = partes[1]
+            transferir_ftp(archivo)
         else:
             print(
-                "Uso: transferir [hostname] [username] [password] [archivo]")
+                "Uso: transferir [archivo]")
+    elif partes[0] == "descargar":
+        # Invoca descargar_ftp indicando archivo a descargar
+        if len(partes) == 2:
+            archivo = partes[1]
+            descargar_ftp(archivo)
+        else:
+            print(
+                "Uso: transferir [archivo]")
+    elif partes[0] == "ftp":
+        # Invoca listar_ftp
+        if len(partes) == 1:
+            listar_ftp()
+        else:
+            print(
+                "Uso: ftp")
     else:  # Si usuario ingresa un comando no reconocido
         print("Comando no reconocido")
 
@@ -233,9 +247,10 @@ def main():
     while True:
         mostrar_prompt()  # muestra el prompt
         comando = input()  # variable que recibe el input del usuario: comando y parametros
-        ejecutar_comando(comando)  # llamamos a ejecutar_comando
+        comando = comando.strip()
+        if (len(comando) > 0):
+            ejecutar_comando(comando)  # llamamos a ejecutar_comando
 
 
 if __name__ == "__main__":
     main()
-

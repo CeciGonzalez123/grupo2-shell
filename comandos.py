@@ -2,11 +2,11 @@ import shutil
 import os
 import signal
 import stat
-# import pwd
-# import grp
+import pwd
+import grp
 import subprocess
 import getpass
-# import crypt
+import crypt
 import socket
 import time
 from pathlib import Path
@@ -173,28 +173,40 @@ def cambiar_permisos(ruta, modo):
         print(f"Error al cambiar permisos: {e}")
 
 
-def cambiar_propietario(archivos):
+def cambiar_propietario(archivos, uid, gid):
     """
     Cambia los propietarios de un archivo o un conjunto de archivos.
-    :param archivos: Ruta del archivo o directorio cuyo propietario se cambiará.    
+    :param archivos: Lista de rutas de archivos o directorios cuyos propietarios se cambiarán.
+    :param uid: ID del usuario al que se cambiará el propietario.
+    :param gid: ID del grupo al que se cambiará el propietario.
     """
+
     try:
-        uid = 1000
-        gid = 1000
+        # Obtener el UID del nombre de usuario
+        uid_int = pwd.getpwnam(uid).pw_uid
+
+        # Obtener el GID del nombre de grupo
+        gid_int = grp.getgrnam(gid).gr_gid
+
         for archivo in archivos:
-            # Verificar si el archivo o directorio existe
             if not os.path.exists(archivo):
                 raise FileNotFoundError(
                     f"El archivo o directorio '{archivo}' no existe.")
-            os.chown(archivo, uid, gid)
-        print(
-            f"Propietario de '{archivo}' cambiado a usuario y grupo root ({uid}:{gid})")
+
+            # Cambiar el propietario del archivo
+            os.chown(archivo, uid_int, gid_int)
+            print(f"Propietario de '{archivo}' cambiado a {uid}:{gid}")
+
+    except KeyError:
+        print(f"El usuario '{uid}' o el grupo '{gid}' no existen.")
+    except FileNotFoundError as e:
+        print(e)
     except Exception as e:
+        print(f"Error al cambiar propietario: {e}")
         logger.log(
             f"Error al cambiar propietario: {e}",
             "sistema_error",
             logging.ERROR)
-        print(f"Error al cambiar propietario: {e}")
 
 
 def cambiar_clave(usuario):
@@ -229,12 +241,13 @@ def cambiar_clave(usuario):
                             continue
                         break
                     parts[1] = clave
+                    passwd_file.write(":".join(parts) + "\n")
                     print(":".join(parts))
             if not existe:
                 print(f"Usuario '{usuario}' no existe")
             else:
                 print(
-                    f"Clave de usuario '{usuario}' ha sido cambiada (simulada)")
+                    f"Clave de usuario '{usuario}' ha sido cambiada")
     except Exception as e:
         logger.log(
             f"Error al escribir en /etc/passwd: {e}",
@@ -326,8 +339,7 @@ def solicitar_clave():
             print("Clave y confirmacion no coinciden, intente nuevamente")
             continue
         else:
-            # return crypt.crypt(password, "22")
-            return False
+            return crypt.crypt(password, "22")
 
 
 def agregar_informacion(filename, texto):
