@@ -1,6 +1,6 @@
 import os
 from ftp import transferir_ftp, descargar_ftp, listar_ftp
-from usuario import agregar_usuario, cambiar_clave, leer_metadata_usuario
+from usuario import crear_usuario, cambiar_clave, leer_metadata_usuario
 import logger
 import logging
 from comandos import (copiar_archivos, mover_archivos,
@@ -154,14 +154,13 @@ def ejecutar_comando(comando):
         else:
             print("Uso: permisos [archivo] [modo]")
     elif partes[0] == "propietario":
-        # Invoca cambiar_propietario a multiples archivos y los asigna al usuario root
+        # Invoca cambiar_propietario a multiples archivos y los asigna al usuario:grupo indicado
         if len(partes) > 3:
-            usurio = partes[-2]
-            grupo = partes[-1]
-            cambiar_propietario(partes[1:-2], usurio, grupo)
+            nuevo_propietario = partes[-1]
+            cambiar_propietario(partes[1:-1], nuevo_propietario)
         else:
             print(
-                "Uso: propietario [archivo_1] [archivo_2] [archivo_n] [usuario] [grupo]")
+                "Uso: propietario [archivo_1] [archivo_2] [archivo_n] [usuario:grupo]")
     elif partes[0] == "clave":
         # Invoca cambiar_clave para usuario actual
         if len(partes) == 1:
@@ -176,9 +175,9 @@ def ejecutar_comando(comando):
         else:
             print("Uso: actual")
     elif partes[0] == "usuario":
-        # Invoca agregar_usuario
+        # Invoca crear_usuario
         if len(partes) == 1:
-            agregar_usuario()
+            crear_usuario()
         else:
             print("Uso: usuario")
     elif partes[0] == "salir":
@@ -246,7 +245,7 @@ def ejecutar_comando(comando):
             descargar_ftp(archivo)
         else:
             print(
-                "Uso: transferir [archivo]")
+                "Uso: descargar [archivo]")
     elif partes[0] == "ftp":
         # Invoca listar_ftp
         if len(partes) == 1:

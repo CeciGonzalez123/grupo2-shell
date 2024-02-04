@@ -169,13 +169,16 @@ def cambiar_permisos(ruta, modo):
         print(f"Error al cambiar permisos: {e}")
 
 
-def cambiar_propietario(archivos, uid, gid):
+def cambiar_propietario(archivos, propietario):
     """
     Cambia los propietarios de un archivo o un conjunto de archivos.
     :param archivos: Lista de rutas de archivos o directorios cuyos propietarios se cambiarán.
-    :param uid: ID del usuario al que se cambiará el propietario.
-    :param gid: ID del grupo al que se cambiará el propietario.
+    :param propietario: usuario:grupo al que se cambiará el propietario.
     """
+
+    ids = propietario.split(':')
+    uid = ids[0]
+    gid = ids[1]
 
     try:
         # Obtener el UID del nombre de usuario

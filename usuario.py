@@ -1,28 +1,48 @@
 import getpass
 import re
 import pwd
-import os
+import crypt
 import json
+import os
+from pathlib import Path
+import spwd  # Para verificar si el usuario ya existe en /etc/shadow
+
+
+def obtener_uid_gid_siguiente():
+    # Esto es una simplificación. En un sistema real, se deberían verificar los UID/GID existentes para evitar colisiones.
+    uid_base = 1000
+    gid_base = 1000
+    max_uid = uid_base
+    max_gid = gid_base
+    try:
+        with open("/etc/passwd", "r") as f:
+            for line in f:
+                parts = line.split(":")
+                if int(parts[2]) > max_uid:
+                    max_uid = int(parts[2])
+                if int(parts[3]) > max_gid:
+                    max_gid = int(parts[3])
+    except FileNotFoundError:
+        pass  # /etc/passwd no encontrado, usar valores base
+    return max_uid + 1, max_gid + 1
 
 
 def validar_usuario(usuario):
-    """Validar nombre de usuario y verificar si usuario existe.
-    Retorna True si el nombre de usuario es válido y no existe en el sistema.
-    """
-    # Primero, validar el patrón del nombre de usuario
     if re.match("^[a-z]+$", usuario) is None:
         print(f"El nombre de usuario {usuario} es inválido.")
         return False
-
-    # Luego, verificar si el usuario ya existe en el sistema
     try:
         pwd.getpwnam(usuario)
-        # Si se encuentra el usuario, significa que ya existe, retornar False
         print(f"El usuario {usuario} ya existe.")
         return False
     except KeyError:
-        # Si se lanza KeyError, el usuario no existe, lo cual es bueno en este contexto
-        return True
+        # También verificar en /etc/shadow por seguridad
+        try:
+            spwd.getspnam(usuario)
+            print(f"El usuario {usuario} ya existe en /etc/shadow.")
+            return False
+        except KeyError:
+            return True
 
 
 def validar_ip(ip):
@@ -74,91 +94,62 @@ def solicitar_datos():
 
 
 def ingresar_clave():
-    print(
-        "La clave debe contener al menos: una letra en minuscula, un numero un simbolo y un minimo de 8 caracteres")
-
+    print("La clave debe contener al menos: una letra minúscula, un número, un símbolo y un mínimo de 8 caracteres.")
     while True:
-        passy = getpass.getpass(prompt="Ingrese password para el usuario: ")
-        confirm_passy = getpass.getpass(prompt="Confirme password: ")
-
-        # Verificar:
-        # coincidencia de password y confirmacion
-        # longitud de al menos 8 caracteres
-        # clave contiene al menos 1 numero
-        # clave contiene al menos 1 letra
-        # clave contiene al menos 1 simbolo
-
-        if passy != confirm_passy \
-                or len(passy) < 8 \
-                or not re.search('\d', passy) \
-                or not re.search(r"[a-z]", passy) \
-                or not re.search(r"[ !#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', passy):
-
-            print("Clave no permitida, intente nuevamente")
-            continue
-
+        clave = getpass.getpass(prompt="Ingrese password para el usuario: ")
+        confirmacion_clave = getpass.getpass(prompt="Confirme password: ")
+        if (clave == confirmacion_clave and len(clave) >= 8 and re.search(r"\d", clave) and
+                re.search(r"[a-z]", clave) and re.search(r"[!@#$%^&*(),.?\":{}|<>]", clave)):
+            return clave
         else:
-            return passy
+            print("Clave no permitida, intente nuevamente.")
 
 
-def agregar_usuario():
-    datos = solicitar_datos()
-    code = ingresar_clave()
-    usuario = datos[0]
+def encriptar_clave(clave):
+    salt = crypt.mksalt(crypt.METHOD_SHA512)
+    return crypt.crypt(clave, salt)
 
-    os.system(
-        f"useradd --create-home --user-group --shell /bin/bash {usuario}")
-    os.system(f"echo {usuario}:{code} | chpasswd")
 
-    # Datos adicionales
-    metadata = {
-        'entrada': datos[1],
-        'salida': datos[2],
-        'ip': datos[3]
-    }
+def agregar_usuario(usuario, clave, uid, gid):
+    clave_encriptada = crypt.crypt(clave, crypt.mksalt(crypt.METHOD_SHA512))
 
-    # Guardar los datos adicionales en un archivo JSON en el directorio home del usuario
+    # Crear grupo
+    with open("/etc/group", "a") as group_file:
+        group_file.write(f"{usuario}:x:{gid}:\n")
+
+    # Crear usuario y corregir el formato de GECOS
     home_dir = f"/home/{usuario}"
-    metadata_file = os.path.join(home_dir, f"{usuario}_metadata.json")
+    shell = "/bin/bash"
+    with open("/etc/passwd", "a") as passwd_file:
+        passwd_file.write(f"{usuario}:x:{uid}:{gid}::{home_dir}:{shell}\n")
 
-    with open(metadata_file, 'w') as file:
-        json.dump(metadata, file)
+    # Configurar contraseña
+    with open("/etc/shadow", "a") as shadow_file:
+        shadow_file.write(f"{usuario}:{clave_encriptada}:17646:0:99999:7:::\n")
 
+    # Crear directorio home y establecer permisos y propiedad
+    os.makedirs(home_dir, exist_ok=True)
+    os.system(f"chown {uid}:{gid} {home_dir}")
+    os.system(f"chmod 700 {home_dir}")
+
+
+def crear_usuario():
+    datos = solicitar_datos()
+    clave = ingresar_clave()
+    usuario = datos[0]
+    uid, gid = obtener_uid_gid_siguiente()
+    clave_encriptada = encriptar_clave(clave)
+    agregar_usuario(usuario, clave, uid, gid)
+
+    metadata_file = Path(f"/home/{usuario}") / f"{usuario}_metadata.json"
+    with metadata_file.open('w') as file:
+        json.dump({
+            'entrada': datos[1],
+            'salida': datos[2],
+            'ip': datos[3]
+        }, file)
     print(
         f"Usuario {usuario} creado con éxito. Información adicional almacenada en {metadata_file}.")
-
-
-def cambiar_clave(usuario):
-    print(f"Cambiando la contraseña de: {usuario}")
-
-    while True:
-        nueva_password = getpass.getpass(
-            prompt="Ingrese la nueva contraseña: ")
-        confirmar_password = getpass.getpass(
-            prompt="Confirme la nueva contraseña: ")
-
-        # Verificar:
-        # coincidencia de password y confirmacion
-        # longitud de al menos 8 caracteres
-        # clave contiene al menos 1 numero
-        # clave contiene al menos 1 letra
-        # clave contiene al menos 1 simbolo
-        if nueva_password != confirmar_password:
-            print("Las contraseñas no coinciden. Intente de nuevo.")
-        elif len(nueva_password) < 8:
-            print("La contraseña debe tener al menos 8 caracteres.")
-        elif not re.search('\d', nueva_password):
-            print("La contraseña debe contener al menos un número.")
-        elif not re.search(r"[a-z]", nueva_password):
-            print("La contraseña debe contener al menos una letra minúscula.")
-        elif not re.search(r"[ !#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', nueva_password):
-            print("La contraseña debe contener al menos un símbolo.")
-        else:
-            break  # La contraseña es válida y coincide
-
-    # Cambiar la contraseña del usuario
-    os.system(f"echo '{usuario}:{nueva_password}' | sudo chpasswd")
-    print(f"Contraseña cambiada exitosamente para el usuario {usuario}.")
 
 
 def leer_metadata_usuario(usuario):
@@ -174,3 +165,52 @@ def leer_metadata_usuario(usuario):
             return metadata
     else:
         return {}
+
+
+def cambiar_clave(usuario):
+    if validar_usuario(usuario):
+        print(f"El usuario {usuario} no existe.")
+        return
+
+    print(f"Cambiando la contraseña de: {usuario}")
+
+    while True:
+        nueva_password = getpass.getpass(
+            prompt="Ingrese la nueva contraseña: ")
+        confirmar_password = getpass.getpass(
+            prompt="Confirme la nueva contraseña: ")
+
+        if nueva_password != confirmar_password:
+            print("Las contraseñas no coinciden. Intente de nuevo.")
+        elif len(nueva_password) < 8:
+            print("La contraseña debe tener al menos 8 caracteres.")
+        elif not re.search('\d', nueva_password):
+            print("La contraseña debe contener al menos un número.")
+        elif not re.search(r"[a-z]", nueva_password):
+            print("La contraseña debe contener al menos una letra minúscula.")
+        elif not re.search(r"[ !#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', nueva_password):
+            print("La contraseña debe contener al menos un símbolo.")
+        else:
+            break  # La contraseña es válida y coincide
+
+    clave_encriptada = encriptar_clave(nueva_password)
+
+    # Leer /etc/shadow, encontrar la línea del usuario, y actualizar la contraseña
+    try:
+        with open("/etc/shadow", "r") as shadow_file:
+            lineas = shadow_file.readlines()
+
+        with open("/etc/shadow", "w") as shadow_file:
+            for linea in lineas:
+                if linea.startswith(usuario + ":"):
+                    partes = linea.split(":")
+                    # Actualizar la contraseña encriptada
+                    partes[1] = clave_encriptada
+                    linea = ":".join(partes)
+                shadow_file.write(linea)
+
+        print(f"Contraseña cambiada exitosamente para el usuario {usuario}.")
+    except FileNotFoundError:
+        print("No se pudo encontrar el archivo /etc/shadow.")
+    except PermissionError:
+        print("No se tienen los permisos necesarios para modificar /etc/shadow. Se requiere ejecutar como root.")
