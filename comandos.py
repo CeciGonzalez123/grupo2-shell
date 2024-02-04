@@ -5,10 +5,6 @@ import stat
 import pwd
 import grp
 import subprocess
-import getpass
-import crypt
-import socket
-import time
 from pathlib import Path
 from demonio import Demonio
 import logger
@@ -209,53 +205,6 @@ def cambiar_propietario(archivos, uid, gid):
             logging.ERROR)
 
 
-def cambiar_clave(usuario):
-    """
-    Cambia la contraseña del usuario actual
-    """
-    try:
-        with open("/etc/passwd", "r") as passwd_file:
-            lines = passwd_file.readlines()
-    except Exception as e:
-        logger.log(
-            f"Error al leer /etc/passwd: {e}",
-            "sistema_error",
-            logging.ERROR)
-        print(f"Error al leer /etc/passwd: {e}")
-
-    # Busca al usuario indicado y solicia nueva clave
-    try:
-        with open("/etc/passwd", "r") as passwd_file:
-            existe = False
-            for line in lines:
-                parts = line.strip().split(":")
-                if parts[0] == usuario:
-                    existe = True
-                    while True:
-                        clave = getpass.getpass(prompt="Ingrese clave: ")
-                        confirmacion = getpass.getpass(
-                            prompt="Confirme clave: ")
-
-                        if clave != confirmacion:
-                            print("No coincide, intente nuevamente")
-                            continue
-                        break
-                    parts[1] = clave
-                    passwd_file.write(":".join(parts) + "\n")
-                    print(":".join(parts))
-            if not existe:
-                print(f"Usuario '{usuario}' no existe")
-            else:
-                print(
-                    f"Clave de usuario '{usuario}' ha sido cambiada")
-    except Exception as e:
-        logger.log(
-            f"Error al escribir en /etc/passwd: {e}",
-            "sistema_error",
-            logging.ERROR)
-        print(f"Error al escribir en /etc/passwd: {e}")
-
-
 def mostrar_directorio_actual():
     """
     Muestra el directorio de trabajo actual.
@@ -268,84 +217,6 @@ def mostrar_directorio_actual():
             "sistema_error",
             logging.ERROR)
         print(f"Error al obtener el directorio actual: {e}")
-
-
-def agregar_usuario(username):
-    if existe_usuario(username):
-        print(f"{username} ya existe", "error")
-        return True
-
-    # Generar id de usuario
-    uid = generar_id()
-
-    # Crer perfil de usuario
-    perfil = "/home/" + username
-    if (os.path.exists("/home/" + username) == 0):
-        os.mkdir(perfil, int('755', 8))
-
-    # Solicitar clave
-    password = solicitar_clave()
-
-    # Solicitar informacion personal
-    fullname = input("Fullname: ")
-    ip = str(socket.gethostbyname("127.0.1.1"))
-    entrada = input("Hora de Entrada HH:MM: ")
-    entrada = entrada.replace(":", "")
-    salida = input("Hora de Salida HH:MM: ")
-    salida = salida.replace(":", "")
-    epoch = int(time.time())
-
-    # Agregar informacion en archivos en shadow
-    info = f"{username}:{password}:{epoch}:0:99999:7:::\n"
-    agregar_informacion("/etc/shadow", info)
-
-    # Agregar informacion en archivos en passwd
-    info = f"{username}:x:{uid}:{uid}:{fullname},{ip},{entrada},{salida}:{perfil}:/bin/bash\n"
-    agregar_informacion("/etc/passwd", info)
-
-    # Agregar informacion en archivos en group
-    info = f"{username}:x:{uid}:\n"
-    agregar_informacion("/etc/group", info)
-
-    print(f"Usuario {username} creado con exito")
-
-
-def existe_usuario(username):
-    with open("/etc/passwd") as f:
-        lines = f.readlines()
-    for line in lines:
-        line = line.strip().split(':')
-        if line[0] == username:
-            return True
-    return False
-
-
-def generar_id():
-    with open("/etc/passwd") as f:
-        lines = f.readlines()
-    max_id = 0
-    for line in lines:
-        line = line.strip().split(':')
-        max_id = max(max_id, int(line[2]))
-    return str(max_id + 1)
-
-
-def solicitar_clave():
-    while True:
-        password = getpass.getpass(prompt="Ingrese password: ")
-        confirmacion = getpass.getpass(prompt="Confirme password: ")
-
-        if password != confirmacion:
-            print("Clave y confirmacion no coinciden, intente nuevamente")
-            continue
-        else:
-            return crypt.crypt(password, "22")
-
-
-def agregar_informacion(filename, texto):
-    with open(filename, "a") as file:
-        file.write(texto)
-    return
 
 
 def matar_procesos(pid):

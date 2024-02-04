@@ -66,4 +66,3 @@ def listar_ftp():
 def registrar_transferencia(hostname, archivo):
     logger.log(
         f"Transferencia a Host {hostname} de '{archivo}' ", "ftp", logging.INFO)
-

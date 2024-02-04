@@ -1,16 +1,17 @@
 import os
-import signal
 from ftp import transferir_ftp, descargar_ftp, listar_ftp
+from usuario import agregar_usuario, cambiar_clave, leer_metadata_usuario
 import logger
 import logging
-from comandos import (copiar_archivos, mover_archivos, renombrar_archivo,
-                      listar_directorio, crear_directorios, cambiar_directorio,
-                      cambiar_permisos, cambiar_propietario, cambiar_clave,
-                      mostrar_directorio_actual, agregar_usuario,
-                      matar_procesos, buscar_en_archivo, iniciar_demonio,
+from comandos import (copiar_archivos, mover_archivos,
+                      renombrar_archivo, listar_directorio,
+                      crear_directorios, cambiar_directorio,
+                      cambiar_permisos, cambiar_propietario,
+                      mostrar_directorio_actual, matar_procesos,
+                      buscar_en_archivo, iniciar_demonio,
                       detener_demonio, ejecutar_comando_sistema)
-from datetime import datetime
-import socket
+import datetime
+import getpass
 
 # Lista para almacenar el historial de comandos de la sesión actual
 historial_comandos = []
@@ -56,15 +57,37 @@ def mostrar_historial():
 
 
 def hora_actual():
-    hora = datetime.now().strftime("%H:%M:%S")
-    return datetime.strptime(hora, "%H:%M:%S").time()
+    return datetime.datetime.now().strftime("%H:%M")
 
 
-def log_entrada(ip="127.0.1.1"):
+def log_entrada(ip="127.0.0.1"):
+    usuario = getpass.getuser()
+    metadata = leer_metadata_usuario(usuario)
+    entrada = metadata.get('entrada', '08:00')
+    salida = metadata.get('salida', '17:00')
+    # Usar la IP proporcionada o la de metadata si no se proporciona.
+    ip = metadata.get('ip', ip)
+    print(f"Horario de entrada: {entrada}")
+    print(f"Horario de salida: {salida}")
+    print(f"IP: {ip}")
+
     hora = hora_actual()
-    ip_actual = socket.gethostbyname(ip)
-    logger.log(
-        f"Inicio de sesión a las '{hora}' desde la ip '{ip_actual}'.", "usuario_horarios_log", logging.INFO)
+    hora_entrada = datetime.datetime.strptime(entrada, "%H:%M").time()
+    hora_salida = datetime.datetime.strptime(salida, "%H:%M").time()
+    hora_actual_obj = datetime.datetime.strptime(hora, "%H:%M").time()
+
+    tipo_log = logging.INFO
+    # Verificar si la hora actual está fuera del rango de horario del trabajador
+    if not hora_entrada <= hora_actual_obj <= hora_salida:
+        mensaje = f"Inicio de sesión de usuario {usuario} fuera de horario a las '{hora}' desde la ip '{ip}'."
+        tipo_log = logging.WARNING
+        print("Inicio de sesión fuera del horario de trabajo.")
+    else:
+        mensaje = f"Inicio de sesión de usuario {usuario} dentro de horario a las '{hora}' desde la ip '{ip}'."
+        print("Inicio de sesión dentro del horario de trabajo.")
+
+    # Aquí asumimos que `logger` es un objeto de logging ya configurado.
+    logger.log(mensaje, 'usuario_horarios_log', tipo_log)
 
 
 def log_salida():
@@ -153,10 +176,9 @@ def ejecutar_comando(comando):
         else:
             print("Uso: actual")
     elif partes[0] == "usuario":
-        # Invoca agregar_usuario con un nombre de usuario
+        # Invoca agregar_usuario
         if len(partes) == 1:
-            username = input("Introduzca el nombre de usuario: ")
-            agregar_usuario(username)
+            agregar_usuario()
         else:
             print("Uso: usuario")
     elif partes[0] == "salir":
