@@ -7,12 +7,7 @@
 1. Desde el ubuntu entrar como usuario root
 2. Ejecutar el comando export LFS=/mnt/lfs
 3. Ejecutar el comando cd $LFS 
-4. Ejecutar el comando ls para comprobar si se encuentra /sources
-1. Ejecutar el comando cd /sources y crear directorio con el nombre del directorio de la shell (en nuestro caso grupo2-shell)
-2.Ejecutar el comando ls para comprobar el contenido de /sources
-3. Entrar al lfs como usuario root, en en el lfs el directorio / equivale a /mnt/lfs,hacer pwd para comprobar que estamos en la /
-4. Ejecutar el comando cd /sources, para movernos al directorio /sources
-1. Ejecutar el comando pwd para comprobar el contenido de /sources
+4. Creamos la carpeta grupo2-shell 
 2. Ejecutar el comando cd grupo2-shell y ejecutar git https://github.com/CeciGonzalez123/grupo2-shell, con eso clonamos el repositorio dentro del lfs
 3. ejecutamos python3 main.py para entrar dentro de la shell manualmente y ejecutamos el comando copiar /sources/grupo2-shell / para mover el repositorio a /
 4. salimos de la shell con el comando salir
