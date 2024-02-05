@@ -8,21 +8,20 @@
 2. Ejecutar el comando export LFS=/mnt/lfs
 3. Ejecutar el comando cd $LFS 
 4. Creamos la carpeta shell
-5. Ejecutar el comando cd grupo2-shell y ejecutar git clone https://github.com/CeciGonzalez123/grupo2-shell, con eso clonamos el repositorio dentro del lfs
-6. ejecutamos python3 main.py para entrar dentro de la shell manualmente y ejecutamos el comando copiar /grupo2-shell / para mover el repositorio a /
+5. Ejecutar el comando cd shell/grupo2-shell y ejecutar git clone https://github.com/CeciGonzalez123/grupo2-shell, con eso clonamos el repositorio dentro del lfs
+6. ejecutamos python3 main.py para entrar dentro de la shell manualmente y ejecutamos el comando copiar /mnt/lfs/grupo2-shell / para mover el repositorio a /
 7. salimos de la shell con el comando salir
 8. cd / para movernos a al directorio /
 9. ejecutamos chmod -R 777/grupo2-shell 
 10. ls -l para comprobar si le dio todos los permisos
-11. Entrar al ubuntu, ejecutar export LFS=/mnt/lfs y cd $LFS
-12. Ejecutar sudo nano /etc/profile, borrar el contenido 
-13. Ejecutar sudo nano shell.sh, agregarle el script:  
+11. Ejecutar sudo nano /etc/profile, borrar el contenido 
+12. Ejecutar sudo nano shell.sh, agregarle el script:  
 #!/bin/bash
       cd /grupo2-shell
       python3 main.py
-14. ejecutamos sudo nano /etc/profile, agregarle el script:
+13. ejecutamos sudo nano /etc/profile, agregarle el script:
       bash /shell.sh
-15. Como usuario root ejecutar  chmod -R 777 / var/log/shell
+14. Como usuario root ejecutar  chmod -R 777 / var/log/shell
 ### Instrucciones de uso comandos Shell
  #### COPIAR
  <p>Uso: copiar [archivo_1] [archivo_2] [archivo_n] [ruta_destino]</p>
