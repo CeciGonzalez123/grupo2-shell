@@ -7,22 +7,22 @@
 1. Desde el ubuntu entrar como usuario root
 2. Ejecutar el comando export LFS=/mnt/lfs
 3. Ejecutar el comando cd $LFS 
-4. Creamos la carpeta grupo2-shell 
-2. Ejecutar el comando cd grupo2-shell y ejecutar git https://github.com/CeciGonzalez123/grupo2-shell, con eso clonamos el repositorio dentro del lfs
-3. ejecutamos python3 main.py para entrar dentro de la shell manualmente y ejecutamos el comando copiar /sources/grupo2-shell / para mover el repositorio a /
-4. salimos de la shell con el comando salir
-1. cd / para movernos a al directorio /
-2. ejecutamos chmod -R 777/grupo2-shell 
-3. ls -l para comprobar si le dio todos los permisos
-4. Entrar al ubuntu, ejecutar export LFS=/mnt/lfs y cd $LFS
-1. Ejecutar sudo nano /etc/profile, borrar el contenido 
-2. Ejecutar sudo nano shell.sh, agregarle el script:  
+4. Creamos la carpeta shell
+5. Ejecutar el comando cd grupo2-shell y ejecutar git clone https://github.com/CeciGonzalez123/grupo2-shell, con eso clonamos el repositorio dentro del lfs
+6. ejecutamos python3 main.py para entrar dentro de la shell manualmente y ejecutamos el comando copiar /grupo2-shell / para mover el repositorio a /
+7. salimos de la shell con el comando salir
+8. cd / para movernos a al directorio /
+9. ejecutamos chmod -R 777/grupo2-shell 
+10. ls -l para comprobar si le dio todos los permisos
+11. Entrar al ubuntu, ejecutar export LFS=/mnt/lfs y cd $LFS
+12. Ejecutar sudo nano /etc/profile, borrar el contenido 
+13. Ejecutar sudo nano shell.sh, agregarle el script:  
 #!/bin/bash
       cd /grupo2-shell
       python3 main.py
-3. ejecutamos sudo nano /etc/profile, agregarle el script:
+14. ejecutamos sudo nano /etc/profile, agregarle el script:
       bash /shell.sh
-4. Como usuario root ejecutar  chmod -R 777 var/log/shell
+15. Como usuario root ejecutar  chmod -R 777 / var/log/shell
 ### Instrucciones de uso comandos Shell
  #### COPIAR
  <p>Uso: copiar [archivo_1] [archivo_2] [archivo_n] [ruta_destino]</p>
